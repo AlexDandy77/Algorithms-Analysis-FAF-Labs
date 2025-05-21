@@ -1,14 +1,3 @@
-# DFS Maze Game with Hint Button & Multiple Difficulty Levels
-# -----------------------------------------------------------
-# Controls:
-#   Arrow keys  – Move
-#   H or mouse  – Toggle shortest-path hint
-#   1 / 2 / 3   – Easy / Medium / Hard maze size
-#   R           – Restart current level
-#   Esc         – Quit
-# -----------------------------------------------------------
-# Requires: pygame  (pip install pygame)
-
 import pygame
 import random
 import sys
@@ -18,16 +7,21 @@ from collections import deque
 CELL_SIZE    = 24                        # pixel size of one cell
 LEVELS       = {"1": (15, 15),           # Easy
                 "2": (25, 25),           # Medium (default)
-                "3": (35, 35)}           # Hard
+                "3": (30, 30)}           # Hard
 FPS          = 60
-WALL_COLOR   = (40, 40, 40)
-HINT_COLOR   = (235, 200, 85)
-PLAYER_COLOR = (0, 120, 215)
-EXIT_COLOR   = (220, 50, 50)
-BG_COLOR     = (15, 15, 15)
-TEXT_COLOR   = (240, 240, 240)
-BTN_COLOR    = (70, 70, 70)
-BTN_HOVER    = (100, 100, 100)
+
+# Color Palette
+WALL_COLOR   = (70, 80, 90)              # Dark, subtle grey-blue for walls
+HINT_COLOR   = (255, 170, 70)            # Warm orange for hint
+PLAYER_COLOR = (80, 180, 255)            # Brighter blue for player
+EXIT_COLOR   = (255, 90, 90)             # Vibrant red for exit
+BG_COLOR     = (25, 35, 45)              # Dark blue-grey background
+TEXT_COLOR   = (230, 230, 230)           # Light grey for text
+BTN_COLOR    = (60, 70, 80)              # Darker button
+BTN_HOVER    = (90, 110, 130)            # Lighter blue-grey on hover
+WIN_TEXT_COLOR = (120, 255, 120)         # Green for victory message
+
+WALL_THICKNESS = 3
 
 # --------------------------- MAZE GENERATION (DFS) --------------------------- #
 def generate_maze(cols, rows):
@@ -86,7 +80,7 @@ class MazeGame:
         self.cols, self.rows = LEVELS[key]
         size = (self.cols*CELL_SIZE, self.rows*CELL_SIZE + 50)  # +UI bar
         self.screen = pygame.display.set_mode(size)
-        pygame.display.set_caption(f"DFS Maze – Level {key}")
+        pygame.display.set_caption(f"DFS Mystic Maze – Level {key}")
         self.reset()
 
     def reset(self):
@@ -103,26 +97,26 @@ class MazeGame:
             for y in range(self.rows):
                 cx, cy = x*CELL_SIZE, off_y + y*CELL_SIZE
                 if self.walls[x][y][0]:
-                    pygame.draw.line(self.screen, WALL_COLOR, (cx, cy), (cx+CELL_SIZE, cy), 2)
+                    pygame.draw.line(self.screen, WALL_COLOR, (cx, cy), (cx+CELL_SIZE, cy), WALL_THICKNESS)
                 if self.walls[x][y][1]:
-                    pygame.draw.line(self.screen, WALL_COLOR, (cx+CELL_SIZE, cy), (cx+CELL_SIZE, cy+CELL_SIZE), 2)
+                    pygame.draw.line(self.screen, WALL_COLOR, (cx+CELL_SIZE, cy), (cx+CELL_SIZE, cy+CELL_SIZE), WALL_THICKNESS)
                 if self.walls[x][y][2]:
-                    pygame.draw.line(self.screen, WALL_COLOR, (cx, cy+CELL_SIZE), (cx+CELL_SIZE, cy+CELL_SIZE), 2)
+                    pygame.draw.line(self.screen, WALL_COLOR, (cx, cy+CELL_SIZE), (cx+CELL_SIZE, cy+CELL_SIZE), WALL_THICKNESS)
                 if self.walls[x][y][3]:
-                    pygame.draw.line(self.screen, WALL_COLOR, (cx, cy), (cx, cy+CELL_SIZE), 2)
+                    pygame.draw.line(self.screen, WALL_COLOR, (cx, cy), (cx, cy+CELL_SIZE), WALL_THICKNESS)
 
         # exit cell
-        ex = pygame.Rect((self.cols-1)*CELL_SIZE+2,
-                         off_y + (self.rows-1)*CELL_SIZE+2,
-                         CELL_SIZE-3, CELL_SIZE-3)
-        pygame.draw.rect(self.screen, EXIT_COLOR, ex)
+        exit_rect = pygame.Rect((self.cols-1)*CELL_SIZE + 4, # adjusted padding
+                                 off_y + (self.rows-1)*CELL_SIZE + 4, # adjusted padding
+                                 CELL_SIZE - 8, CELL_SIZE - 8) # adjusted size
+        pygame.draw.rect(self.screen, EXIT_COLOR, exit_rect, border_radius=1) # Rounded exit
 
         # hint path
         if self.show_hint:
             for (x, y) in self.hint_path:
-                r = pygame.Rect(x*CELL_SIZE+8, off_y + y*CELL_SIZE+8,
-                                CELL_SIZE-15, CELL_SIZE-15)
-                pygame.draw.rect(self.screen, HINT_COLOR, r)
+                r = pygame.Rect(x*CELL_SIZE+6, off_y + y*CELL_SIZE+6,
+                                CELL_SIZE-12, CELL_SIZE-12)
+                pygame.draw.rect(self.screen, HINT_COLOR, r, border_radius=1)
 
     def draw_player(self):
         off_y = 50
@@ -139,7 +133,7 @@ class MazeGame:
         # hint button
         txt = "Show Path" if not self.show_hint else "Hide Path"
         ts  = self.font.render(txt, True, TEXT_COLOR)
-        pad = 10
+        pad = 5
         btn = pygame.Rect(20, 10, ts.get_width()+pad*2, ts.get_height()+pad*2)
         hover = btn.collidepoint(pygame.mouse.get_pos())
         pygame.draw.rect(self.screen, BTN_HOVER if hover else BTN_COLOR,
@@ -148,14 +142,17 @@ class MazeGame:
         self.btn_hint = btn
 
         # level info
-        lbl = self.font.render("Level: "+self.lvl_key+"  (1/2/3)",
-                               True, TEXT_COLOR)
-        self.screen.blit(lbl,
-                         (self.screen.get_width()-lbl.get_width()-20, 14))
+        lbl_text = "Level: "+self.lvl_key+"  (1/2/3)"
+        lbl = self.font.render(lbl_text, True, TEXT_COLOR)
+        # Center the level text vertically in the UI bar
+        lbl_x = self.screen.get_width() - lbl.get_width() - 20
+        lbl_y = (50 - lbl.get_height()) // 2 # UI bar height is 60
+        self.screen.blit(lbl, (lbl_x, lbl_y))
+
 
     def draw_victory(self):
         m = self.font2.render("You escaped! Press R to replay.",
-                              True, TEXT_COLOR)
+                              True, WIN_TEXT_COLOR)
         rect = m.get_rect(center=(self.screen.get_width()//2,
                                   self.screen.get_height()//2))
         self.screen.blit(m, rect)

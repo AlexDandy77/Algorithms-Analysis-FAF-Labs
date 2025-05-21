@@ -38,3 +38,31 @@ def extract_edges_from_adj_matrix(adj_matrix):
             if weight != 0 and weight != float('inf'):
                 edges.append((i, j, weight))
     return edges
+
+
+graph_adj_matrix = [
+    [0, 2, 3, 0, 0],
+    [2, 0, 4, 3, 0],
+    [3, 4, 0, 5, 0],
+    [0, 3, 5, 0, 1],
+    [0, 0, 0, 1, 0]
+]
+num_vertices = len(graph_adj_matrix)
+
+print("Adjacency Matrix:")
+for row in graph_adj_matrix:
+    print(row)
+
+edges = extract_edges_from_adj_matrix(graph_adj_matrix)
+print("\nExtracted Edges (sorted by weight for clarity):")
+# Sort for printing, Kruskal's will sort them anyway
+for edge in sorted(edges, key=lambda x: x[2]):
+    print(f"({edge[0]} - {edge[1]}, Weight: {edge[2]})")
+
+mst_edges_ = kruskal_algorithm(num_vertices, edges)
+total_weight = sum(edge[2] for edge in mst_edges_)
+
+print("\nMinimum Spanning Tree Edges for Graph 1:")
+for edge in mst_edges_:
+    print(f"Edge: ({edge[0]} - {edge[1]}), Weight: {edge[2]}")
+print(f"Total MST Weight for Graph 1: {total_weight}")

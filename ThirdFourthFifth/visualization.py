@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import traceback  # For debugging
-
+import scipy
 
 # --- Disjoint Set Union (DSU) for Kruskal's Algorithm ---
 class DSU:
@@ -195,7 +195,7 @@ class Algorithms:
 
             if predecessors[u] is not None:
                 actual_weight = next((w for v_neighbor, w in graph.adj[predecessors[u]] if v_neighbor == u), 0)
-                spt_edges.append(tuple(sorted((predecessors[u], u)) + (actual_weight,)))
+                spt_edges.append(tuple(sorted((predecessors[u], u))) + (actual_weight,))
 
             yield {"type": "node_process", "current_node": u, "frontier_nodes": {n for _, n in pq},
                    "processed_nodes": processed_nodes.copy(), "distances": distances.copy(),

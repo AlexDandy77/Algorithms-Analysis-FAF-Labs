@@ -19,3 +19,23 @@ def prim_algorithm(adj_matrix):
 
     mst = [(parent[i], i, adj_matrix[parent[i]][i]) for i in range(1, size) if parent[i] != -1]
     return mst
+
+graph1_adj_matrix = [
+    [0, 2, 3, 0, 0],
+    [2, 0, 4, 3, 0],
+    [3, 4, 0, 5, 0],
+    [0, 3, 5, 0, 1],
+    [0, 0, 0, 1, 0]
+]
+
+print("Adjacency Matrix:")
+for row in graph1_adj_matrix:
+    print(row)
+
+mst_edges_1 = prim_algorithm(graph1_adj_matrix)
+total_weight_1 = sum(edge[2] for edge in mst_edges_1)
+
+print("\nMST Edges for Graph:")
+for edge in mst_edges_1:
+    print(f"Edge: ({edge[0]} - {edge[1]}), Weight: {edge[2]}")
+print(f"Total MST Weight for Graph: {total_weight_1}")
